@@ -15,7 +15,11 @@ api.interceptors.request.use((config) => {
 });
 
 export const login = async (username, password) => {
-  const response = await api.post('auth/token/', { username, password });
+  // Explicitly set headers to ensure JSON format
+  const response = await api.post('auth/token/', 
+    { username, password },
+    { headers: { 'Content-Type': 'application/json' } }
+  );
   return response.data;
 };
 
@@ -32,7 +36,7 @@ export const uploadDoc = (formData) => api.post('kyc/documents/', formData, {
   headers: { 'Content-Type': 'multipart/form-data' }
 });
 
-export const getQueue = () => api.get('reviewer/queue/');
+export const getQueue = (status = 'submitted') => api.get(`reviewer/queue/?status=${status}`);
 export const getSubmissionDetail = (id) => api.get(`reviewer/submission/${id}/`);
 export const takeAction = (id, data) => api.post(`reviewer/submission/${id}/action/`, data);
 export const getMetrics = () => api.get('reviewer/metrics/');

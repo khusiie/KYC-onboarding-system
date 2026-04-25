@@ -39,7 +39,7 @@ class MerchantSubmissionView(generics.RetrieveUpdateAPIView):
 
     def patch(self, request, *args, **kwargs):
         obj = self.get_object()
-        if obj.status not in ['draft', 'more_info_requested']:
+        if obj.status not in ['draft', 'more_info_requested', 'rejected']:
             return Response(
                 {"error": f"Cannot edit submission in {obj.status} status."},
                 status=status.HTTP_400_BAD_REQUEST
@@ -74,7 +74,10 @@ class ReviewerQueueView(generics.ListAPIView):
     permission_classes = [IsReviewer]
 
     def get_queryset(self):
-        return KYCSubmission.objects.filter(status='submitted').order_by('submitted_at')
+        status_filter = self.request.query_params.get('status', 'submitted')
+        if status_filter == 'history':
+            return KYCSubmission.objects.filter(status__in=['approved', 'rejected', 'more_info_requested']).order_by('-updated_at')
+        return KYCSubmission.objects.filter(status=status_filter).order_by('submitted_at')
 
 class ReviewerSubmissionDetailView(generics.RetrieveAPIView):
     serializer_class = KYCSubmissionSerializer
@@ -140,6 +143,9 @@ class ReviewerMetricsView(views.APIView):
         })
 
 class CustomObtainAuthToken(auth_views.ObtainAuthToken):
+    permission_classes = [permissions.AllowAny]
+    authentication_classes = []
+    
     def post(self, request, *args, **kwargs):
         serializer = self.serializer_class(data=request.data,
                                            context={'request': request})

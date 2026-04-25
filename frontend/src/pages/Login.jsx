@@ -14,6 +14,7 @@ const Login = () => {
     e.preventDefault();
     setError('');
     setLoading(true);
+    localStorage.clear(); // Clear old tokens to avoid conflicts
     try {
       const data = await loginApi(username, password);
       localStorage.setItem('token', data.token);
