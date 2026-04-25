@@ -1,7 +1,7 @@
 # Planning docs (Excluded as requested)
 IMPLEMENTATION_PLAN.md
 BACKEND_IMPLEMENTATION.md
-EXPLAINER.md
+
 # Python
 __pycache__/
 *.py[cod]
