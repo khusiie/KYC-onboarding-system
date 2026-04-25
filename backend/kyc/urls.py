@@ -5,11 +5,13 @@ from rest_framework.authtoken import views as auth_views
 urlpatterns = [
     # Auth
     path('auth/token/', views.CustomObtainAuthToken.as_view(), name='api_token'),
+    path('auth/register/', views.MerchantRegistrationView.as_view(), name='api_register'),
     
     # Merchant
     path('kyc/me/', views.MerchantSubmissionView.as_view(), name='merchant_kyc'),
     path('kyc/me/submit/', views.MerchantSubmitActionView.as_view(), name='merchant_submit'),
     path('kyc/documents/', views.DocumentUploadView.as_view(), name='document_upload'),
+    path('kyc/notifications/', views.MyNotificationsView.as_view(), name='my_notifications'),
     
     # Reviewer
     path('reviewer/queue/', views.ReviewerQueueView.as_view(), name='reviewer_queue'),

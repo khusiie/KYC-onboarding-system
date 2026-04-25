@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { getSubmissionDetail, takeAction } from '../api/api';
 import { ArrowLeft, Check, X, Info, Download, Loader2, AlertCircle } from 'lucide-react';
+import { toast } from 'react-hot-toast';
 
 const SubmissionDetail = () => {
   const { id } = useParams();
@@ -38,9 +39,13 @@ const SubmissionDetail = () => {
         new_status: status,
         rejection_reason: reason
       });
+      const message = status === 'approved' ? 'KYC Approved Successfully!' : 
+                      status === 'rejected' ? 'KYC Rejected Successfully!' :
+                      'Information Requested Successfully!';
+      toast.success(message);
       navigate('/reviewer');
     } catch (err) {
-      alert(err.response?.data?.error || 'Action failed');
+      toast.error(err.response?.data?.error || 'Action failed');
     } finally {
       setActionLoading(false);
     }

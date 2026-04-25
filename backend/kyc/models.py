@@ -57,16 +57,18 @@ class KYCSubmission(models.Model):
         """
         State machine logic to enforce valid transitions.
         """
-        valid_transitions = {
+        ALLOWED_TRANSITIONS = {
             'draft': ['submitted'],
             'submitted': ['under_review', 'approved', 'rejected', 'more_info_requested'],
             'under_review': ['approved', 'rejected', 'more_info_requested'],
             'more_info_requested': ['submitted'],
+            'approved': [],  # Final state
+            'rejected': ['submitted'], # Allow re-submission
         }
 
-        # Validate transition exists
-        if new_status not in valid_transitions.get(self.status, []):
-            raise ValidationError(f"Illegal state transition from {self.status} to {new_status}")
+        # Check if transition is allowed
+        if new_status != self.status and new_status not in ALLOWED_TRANSITIONS.get(self.status, []):
+            raise ValidationError(f"Illegal transition from {self.status} to {new_status}")
 
         # Validate authorization
         if new_status == 'submitted' and user != self.merchant:

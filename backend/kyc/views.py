@@ -1,4 +1,5 @@
 from rest_framework import generics, status, permissions, views
+from django.contrib.auth import get_user_model
 from rest_framework.authtoken import views as auth_views
 from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
@@ -6,6 +7,8 @@ from django.db.models import Count, Avg, F, ExpressionWrapper, fields
 from django.utils import timezone
 from datetime import timedelta
 from django.core.exceptions import ValidationError as DjangoValidationError
+from django.core.validators import validate_email
+from django.core.exceptions import ValidationError
 
 from rest_framework.authtoken.models import Token
 from .models import KYCSubmission, KYCDocument, NotificationLog
@@ -13,6 +16,8 @@ from .serializers import (
     KYCSubmissionSerializer, KYCDocumentSerializer, 
     TransitionSerializer, NotificationLogSerializer
 )
+
+User = get_user_model()
 
 class IsMerchant(permissions.BasePermission):
     def has_permission(self, request, view):
@@ -147,3 +152,45 @@ class CustomObtainAuthToken(auth_views.ObtainAuthToken):
             'username': user.username,
             'role': user.role
         })
+
+class MerchantRegistrationView(views.APIView):
+    permission_classes = [permissions.AllowAny]
+
+    def post(self, request):
+        username = request.data.get('username')
+        password = request.data.get('password')
+        email = request.data.get('email', '')
+
+        if not username or not password:
+            return Response({"error": "Username and password are required"}, status=status.HTTP_400_BAD_REQUEST)
+
+        if User.objects.filter(username=username).exists():
+            return Response({"error": "Username already exists"}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            user = User.objects.create_user(
+                username=username,
+                password=password,
+                email=email,
+                role='MERCHANT'
+            )
+            # Create an empty KYC submission for the new merchant
+            KYCSubmission.objects.create(merchant=user)
+        except Exception as e:
+            print(f"REGISTRATION ERROR: {e}")
+            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        
+        token, created = Token.objects.get_or_create(user=user)
+        
+        return Response({
+            'token': token.key,
+            'username': user.username,
+            'role': user.role
+        }, status=status.HTTP_201_CREATED)
+
+class MyNotificationsView(generics.ListAPIView):
+    serializer_class = NotificationLogSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        return NotificationLog.objects.filter(user=self.request.user).order_by('-created_at')

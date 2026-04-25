@@ -1,9 +1,11 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Login from './pages/Login';
+import Signup from './pages/Signup';
 import MerchantFlow from './pages/MerchantFlow';
 import ReviewerDashboard from './pages/ReviewerDashboard';
 import SubmissionDetail from './pages/SubmissionDetail';
+import { Toaster } from 'react-hot-toast';
 
 const PrivateRoute = ({ children, role }) => {
   const token = localStorage.getItem('token');
@@ -18,9 +20,11 @@ const PrivateRoute = ({ children, role }) => {
 function App() {
   return (
     <Router>
+      <Toaster position="top-right" />
       <div className="min-h-screen bg-slate-50">
         <Routes>
           <Route path="/login" element={<Login />} />
+          <Route path="/signup" element={<Signup />} />
           
           <Route 
             path="/merchant" 

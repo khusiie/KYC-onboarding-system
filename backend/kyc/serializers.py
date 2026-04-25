@@ -43,6 +43,23 @@ class KYCSubmissionSerializer(serializers.ModelSerializer):
         )
         read_only_fields = ('status', 'submitted_at', 'updated_at', 'rejection_reason')
 
+    def validate_full_name(self, value):
+        if len(value.strip()) < 3:
+            raise serializers.ValidationError("Full name must be at least 3 characters long.")
+        return value
+
+    def validate_phone_number(self, value):
+        if not value.isdigit():
+            raise serializers.ValidationError("Phone number must contain only digits.")
+        if not (10 <= len(value) <= 15):
+            raise serializers.ValidationError("Phone number must be between 10 and 15 digits.")
+        return value
+
+    def validate_expected_monthly_volume(self, value):
+        if value is not None and value <= 0:
+            raise serializers.ValidationError("Monthly volume must be a positive number.")
+        return value
+
     def get_is_at_risk(self, obj):
         if obj.status == 'submitted' and obj.submitted_at:
             from django.utils import timezone

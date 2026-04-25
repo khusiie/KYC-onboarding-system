@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { getMyKYC, updateMyKYC, submitKYC, uploadDoc } from '../api/api';
-import { CheckCircle2, Circle, Upload, Send, FileText, Briefcase, User as UserIcon, Loader2 } from 'lucide-react';
+import { getMyKYC, updateMyKYC, submitKYC, uploadDoc, getNotifications } from '../api/api';
+import { CheckCircle2, Circle, Upload, Send, FileText, Briefcase, User as UserIcon, Loader2, AlertCircle, Clock, X } from 'lucide-react';
+import { toast } from 'react-hot-toast';
+import { formatDistanceToNow } from 'date-fns';
 
 const MerchantFlow = () => {
   const [step, setStep] = useState(1);
@@ -17,6 +19,7 @@ const MerchantFlow = () => {
     documents: []
   });
   const [uploading, setUploading] = useState(false);
+  const [notifications, setNotifications] = useState([]);
 
   useEffect(() => {
     fetchKYC();
@@ -24,10 +27,14 @@ const MerchantFlow = () => {
 
   const fetchKYC = async () => {
     try {
-      const { data } = await getMyKYC();
-      setKycData(data);
-      if (data.status !== 'draft' && data.status !== 'more_info_requested') {
-        setStep(4); // Show status page
+      const [{ data: kyc }, { data: notices }] = await Promise.all([
+        getMyKYC(),
+        getNotifications()
+      ]);
+      setKycData(kyc);
+      setNotifications(notices);
+      if (kyc.status !== 'draft' && kyc.status !== 'more_info_requested') {
+        setStep(4);
       }
     } catch (err) {
       console.error(err);
@@ -41,9 +48,10 @@ const MerchantFlow = () => {
     try {
       const { data } = await updateMyKYC(kycData);
       setKycData(data);
+      toast.success('Details saved!');
       setStep(step + 1);
     } catch (err) {
-      alert('Error updating details');
+      toast.error('Error saving details');
     }
   };
 
@@ -58,9 +66,10 @@ const MerchantFlow = () => {
     setUploading(true);
     try {
       await uploadDoc(formData);
+      toast.success(`${type.replace('_', ' ')} uploaded!`);
       fetchKYC();
     } catch (err) {
-      alert(err.response?.data?.error || 'Error uploading file');
+      toast.error(err.response?.data?.error || 'Error uploading file');
     } finally {
       setUploading(false);
     }
@@ -70,13 +79,25 @@ const MerchantFlow = () => {
     setSubmitting(true);
     try {
       await submitKYC();
+      toast.success('KYC Submitted Successfully!');
       fetchKYC();
       setStep(4);
     } catch (err) {
-      alert(err.response?.data?.error || 'Error submitting KYC');
+      toast.error(err.response?.data?.error || 'Error submitting KYC');
     } finally {
       setSubmitting(false);
     }
+  };
+
+  const getFriendlyEvent = (event) => {
+    const mapping = {
+      'STATUS_CHANGED_SUBMITTED': 'Submitted for Review',
+      'STATUS_CHANGED_UNDER_REVIEW': 'Review in Progress',
+      'STATUS_CHANGED_APPROVED': 'KYC Accepted & Verified',
+      'STATUS_CHANGED_REJECTED': 'KYC Rejected',
+      'STATUS_CHANGED_MORE_INFO_REQUESTED': 'Information Requested'
+    };
+    return mapping[event] || event.replace(/_/g, ' ');
   };
 
   if (loading) return (
@@ -282,8 +303,60 @@ const MerchantFlow = () => {
                   Update Details
                 </button>
               </>
-            ) : (
-              <div className="text-red-500">Something went wrong.</div>
+            ) : kycData.status === 'rejected' ? (
+              <div className="animate-in fade-in slide-in-from-bottom-4 duration-700">
+                <div className="w-24 h-24 bg-red-50 rounded-3xl flex items-center justify-center mx-auto mb-8 text-red-500 shadow-inner border border-red-100/50">
+                  <X className="w-12 h-12" />
+                </div>
+                <h2 className="text-3xl font-extrabold text-slate-900 mb-4 tracking-tight">Application Unsuccessful</h2>
+                <p className="text-slate-500 mb-8 max-w-md mx-auto leading-relaxed">
+                  Thank you for your interest. After a thorough review, our compliance team has declined your current submission.
+                </p>
+                
+                <div className="bg-slate-50 rounded-2xl border border-slate-200 p-6 mb-10 text-left max-w-lg mx-auto relative overflow-hidden group">
+                  <div className="absolute top-0 left-0 w-1 h-full bg-red-500" />
+                  <p className="text-xs font-bold text-red-600 uppercase tracking-widest mb-2">Compliance Feedback</p>
+                  <p className="text-slate-700 font-medium leading-relaxed">
+                    "{kycData.rejection_reason || 'Your application did not meet our standard risk and compliance guidelines at this time.'}"
+                  </p>
+                </div>
+
+                <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+                  <button 
+                    onClick={() => setStep(1)} 
+                    className="w-full sm:w-auto px-10 py-4 bg-slate-900 text-white font-bold rounded-2xl hover:bg-slate-800 transition-all shadow-xl hover:shadow-slate-200"
+                  >
+                    Update & Re-submit
+                  </button>
+                  <button className="w-full sm:w-auto px-10 py-4 bg-white text-slate-600 font-bold rounded-2xl border border-slate-200 hover:bg-slate-50 transition-all">
+                    Contact Support
+                  </button>
+                </div>
+              </div>
+            ) : null}
+            
+            {/* Notification History */}
+            {notifications.length > 0 && (
+              <div className="mt-12 text-left border-t pt-8">
+                <h3 className="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
+                  <Clock className="w-5 h-5 text-slate-400" />
+                  Activity History
+                </h3>
+                <div className="space-y-4">
+                  {notifications.map((n) => (
+                    <div key={n.id} className="flex gap-4 p-4 bg-slate-50 rounded-xl border border-slate-100">
+                      <div className="flex-1">
+                        <p className="text-sm font-semibold text-slate-700">
+                          {getFriendlyEvent(n.event_type)}
+                        </p>
+                        <p className="text-xs text-slate-500 mt-1">
+                          {formatDistanceToNow(new Date(n.created_at), { addSuffix: true })}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
             )}
             
             <button 
