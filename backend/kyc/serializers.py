@@ -61,7 +61,7 @@ class KYCSubmissionSerializer(serializers.ModelSerializer):
         return value
 
     def get_is_at_risk(self, obj):
-        if obj.status == 'submitted' and obj.submitted_at:
+        if obj.status in ['submitted', 'under_review'] and obj.submitted_at:
             from django.utils import timezone
             from datetime import timedelta
             return timezone.now() - obj.submitted_at > timedelta(hours=24)

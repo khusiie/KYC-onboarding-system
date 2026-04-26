@@ -59,16 +59,16 @@ class KYCSubmission(models.Model):
         """
         ALLOWED_TRANSITIONS = {
             'draft': ['submitted'],
-            'submitted': ['under_review', 'approved', 'rejected', 'more_info_requested'],
+            'submitted': ['under_review'],
             'under_review': ['approved', 'rejected', 'more_info_requested'],
             'more_info_requested': ['submitted'],
-            'approved': [],  # Final state
-            'rejected': ['submitted'], # Allow re-submission
+            'approved': [],
+            'rejected': [],
         }
 
         # Check if transition is allowed
         if new_status != self.status and new_status not in ALLOWED_TRANSITIONS.get(self.status, []):
-            raise ValidationError(f"Illegal transition from {self.status} to {new_status}")
+            raise ValidationError(f"Illegal state transition from {self.status} to {new_status}")
 
         # Validate authorization
         if new_status == 'submitted' and user != self.merchant:

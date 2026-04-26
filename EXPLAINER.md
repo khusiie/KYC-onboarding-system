@@ -42,7 +42,7 @@ return KYCSubmission.objects.filter(status='submitted').order_by('submitted_at')
 
 # SLA Flag (Computed dynamically in KYCSubmissionSerializer)
 def get_is_at_risk(self, obj):
-    if obj.status == 'submitted' and obj.submitted_at:
+    if obj.status in ['submitted', 'under_review'] and obj.submitted_at:
         return timezone.now() - obj.submitted_at > timedelta(hours=24)
     return False
 ```

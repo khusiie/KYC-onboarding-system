@@ -8,6 +8,7 @@ const ReviewerDashboard = () => {
   const [queue, setQueue] = useState([]);
   const [metrics, setMetrics] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [isFetching, setIsFetching] = useState(false);
   const [activeTab, setActiveTab] = useState('submitted'); // 'submitted' or 'history'
 
   useEffect(() => {
@@ -17,6 +18,7 @@ const ReviewerDashboard = () => {
   }, [activeTab]);
 
   const fetchData = async () => {
+    setIsFetching(true);
     try {
       const [queueRes, metricsRes] = await Promise.all([
         getQueue(activeTab), 
@@ -28,6 +30,7 @@ const ReviewerDashboard = () => {
       console.error(err);
     } finally {
       setLoading(false);
+      setIsFetching(false);
     }
   };
 
@@ -98,13 +101,13 @@ const ReviewerDashboard = () => {
         {/* Tabs Control */}
         <div className="flex gap-1 bg-slate-200/50 p-1 rounded-xl w-fit mb-6">
           <button 
-            onClick={() => { setActiveTab('submitted'); setLoading(true); }}
+            onClick={() => { setActiveTab('submitted'); }}
             className={`flex items-center gap-2 px-6 py-2 rounded-lg text-sm font-medium transition-all ${activeTab === 'submitted' ? 'bg-white text-primary-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
           >
             <Inbox className="w-4 h-4" /> Pending Queue
           </button>
           <button 
-            onClick={() => { setActiveTab('history'); setLoading(true); }}
+            onClick={() => { setActiveTab('history'); }}
             className={`flex items-center gap-2 px-6 py-2 rounded-lg text-sm font-medium transition-all ${activeTab === 'history' ? 'bg-white text-primary-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
           >
             <History className="w-4 h-4" /> Processed History
@@ -114,9 +117,12 @@ const ReviewerDashboard = () => {
         {/* Queue/History Table */}
         <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
           <div className="px-8 py-6 border-b border-slate-100 flex justify-between items-center bg-white">
-            <h2 className="text-xl font-medium text-slate-800 tracking-tight">
-              {activeTab === 'submitted' ? 'Submissions Awaiting Review' : 'Process History'}
-            </h2>
+            <div className="flex items-center gap-3">
+              <h2 className="text-xl font-medium text-slate-800 tracking-tight">
+                {activeTab === 'submitted' ? 'Submissions Awaiting Review' : 'Process History'}
+              </h2>
+              {isFetching && <Loader2 className="w-4 h-4 animate-spin text-primary-600" />}
+            </div>
             {activeTab === 'submitted' && (
               <div className="flex gap-4">
                 <span className="text-[10px] font-medium uppercase text-slate-400 flex items-center gap-1.5"><div className="w-1.5 h-1.5 rounded-full bg-slate-300" /> Standard</span>
@@ -125,7 +131,7 @@ const ReviewerDashboard = () => {
             )}
           </div>
 
-          <div className="overflow-x-auto">
+          <div className={`overflow-x-auto transition-opacity duration-200 ${isFetching ? 'opacity-50' : 'opacity-100'}`}>
             <table className="w-full text-left">
               <thead className="bg-slate-50/50 text-slate-400 text-[10px] font-semibold uppercase tracking-widest">
                 <tr>

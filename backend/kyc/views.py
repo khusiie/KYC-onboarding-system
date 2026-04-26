@@ -113,7 +113,7 @@ class ReviewerMetricsView(views.APIView):
         now = timezone.now()
         last_7_days = now - timedelta(days=7)
         
-        queue_count = KYCSubmission.objects.filter(status='submitted').count()
+        queue_count = KYCSubmission.objects.filter(status__in=['submitted', 'under_review']).count()
         
         # Approval rate over last 7 days
         recent_submissions = KYCSubmission.objects.filter(updated_at__gte=last_7_days)
