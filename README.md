@@ -27,17 +27,17 @@ A full-stack KYC (Know Your Customer) onboarding pipeline built for the Playto F
    ```bash
    cd backend
    ```
-2. Install dependencies:
+2. Create and configure your `.env` file (see `.env.example` or use the database URL provided).
+3. Install dependencies:
    ```bash
-   pip install django djangorestframework django-cors-headers
+   pip install -r requirements.txt
    ```
-3. Run migrations and seed data:
+4. Run migrations and seed data:
    ```bash
-   python manage.py makemigrations kyc
    python manage.py migrate
    python manage.py seed_data
    ```
-4. Start the server:
+5. Start the server:
    ```bash
    python manage.py runserver
    ```
@@ -63,3 +63,15 @@ A full-stack KYC (Know Your Customer) onboarding pipeline built for the Playto F
 | **Merchant (Draft)** | `merchant_draft` | `password123` |
 | **Merchant (Under Review)** | `merchant_review` | `password123` |
 | **Merchant (Approved)** | `merchant_approved` | `password123` |
+
+## 🌐 Deployment
+This project is configured for deployment on **Render** (Backend) and **Vercel** (Frontend).
+
+- **Backend Deployment URL**: `[INSERT_RENDER_URL_HERE]`
+- **Frontend Deployment URL**: `[INSERT_VERCEL_URL_HERE]`
+
+Detailed deployment steps can be found in [DEPLOYMENT_PLAN.md](./DEPLOYMENT_PLAN.md).
+
+## 📄 Documentation
+- **[EXPLAINER.md](./EXPLAINER.md)**: Detailed explanation of the State Machine, File Validation, SLA tracking, and Auth logic (Requirement for the challenge).
+- **[IMPLEMENTATION_PLAN.md](./IMPLEMENTATION_PLAN.md)**: The original roadmap used to build this project.
