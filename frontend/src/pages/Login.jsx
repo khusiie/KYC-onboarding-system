@@ -96,9 +96,18 @@ const Login = () => {
         </p>
 
         <div className="mt-8 pt-6 border-t border-white/10">
-          <p className="text-center text-primary-300 text-xs">
-            © 2026 Playto Pay Inc. All rights reserved.
-          </p>
+          <h3 className="text-[10px] font-bold text-primary-300 uppercase tracking-widest mb-4 text-center">Reviewer Demo Access</h3>
+          <button 
+            type="button"
+            className="w-full p-4 rounded-xl bg-white/5 border border-white/10 text-left hover:bg-white/10 transition-all group flex justify-between items-center"
+            onClick={() => { setUsername('reviewer1'); setPassword('password123'); }}
+          >
+            <div>
+              <p className="text-[9px] font-bold text-primary-400 uppercase mb-1">Admin / Reviewer Role</p>
+              <p className="text-sm text-white font-medium">reviewer1 <span className="text-primary-400 font-normal ml-2">/ password123</span></p>
+            </div>
+            <div className="text-[10px] text-primary-400 font-bold bg-white/5 px-2 py-1 rounded">Click to Auto-fill</div>
+          </button>
         </div>
       </div>
     </div>
